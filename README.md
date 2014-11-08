@@ -17,4 +17,5 @@ https://www.eclipse.org/downloads/
 Step 3: Get OpenCV
 http://docs.opencv.org/doc/tutorials/introduction/desktop_java/java_dev_intro.html
 
+Eclipse installation instructions
 http://docs.opencv.org/trunk/doc/tutorials/introduction/java_eclipse/java_eclipse.html
