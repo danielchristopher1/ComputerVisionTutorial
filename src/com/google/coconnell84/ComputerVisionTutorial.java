@@ -64,7 +64,7 @@ public class ComputerVisionTutorial {
 	tmp.put(0, 0, pixels);
 	return tmp;
     }
-
+    
     /**
      * This will load an image from the file. If
      * @param pFile
@@ -124,6 +124,5 @@ public class ComputerVisionTutorial {
 	    aMatrix = convertToGrayScale(aMatrix);
 	    BufferedImage grayImage = toBufferedImage(aMatrix);
 	}
-	
     }
 }
