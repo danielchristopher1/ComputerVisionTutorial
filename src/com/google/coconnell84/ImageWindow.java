@@ -1,7 +1,5 @@
 package com.google.coconnell84;
 
-import java.awt.image.BufferedImage;
-
 import java.awt.Dimension;
 import java.awt.Image;
 
