@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.net.URL;
 
 import javax.imageio.ImageIO;
+import javax.swing.SwingUtilities;
 
 import org.opencv.core.Core;
 import org.opencv.core.CvType;
@@ -120,9 +121,18 @@ public class ComputerVisionTutorial {
 	
 	if(aFile.exists()) {
 	    Mat aMatrix = toMatrix(getImageFromFile(aFile));
-	    BufferedImage orignalImage = toBufferedImage(aMatrix);
+	    final BufferedImage orignalImage = toBufferedImage(aMatrix);
 	    aMatrix = convertToGrayScale(aMatrix);
-	    BufferedImage grayImage = toBufferedImage(aMatrix);
+	    final BufferedImage grayImage = toBufferedImage(aMatrix);
+	    
+	    SwingUtilities.invokeLater(new Runnable() {
+	        
+	        @Override
+	        public void run() {
+	    		ImageWindow.createImageFrame(orignalImage);
+	    		ImageWindow.createImageFrame(grayImage);
+	        }
+	    });
 	}
     }
 }
