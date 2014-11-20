@@ -53,6 +53,9 @@ public class CameraStabilizationExample {
 
 	ImageWindow imageWindow = ImageWindow.createImageFrame(null, "Image Window");
 	ImageWindow finalWindow = ImageWindow.createImageFrame(null, "Final Window");
+	
+	CameraStabilizationControlView calibControlView =
+		CameraStabilizationControlView.createAndShowGUI(new CameraStabilizationModel());
 
 	while(true) {
 
@@ -68,9 +71,10 @@ public class CameraStabilizationExample {
 		
 		MatOfPoint prevCorner = new MatOfPoint();
 		MatOfPoint cur_corner = new MatOfPoint();
+		CameraStabilizationModel aModel = calibControlView.getModel();
 		
 		Imgproc.GaussianBlur(prevGray, prevGray, new Size(3, 3) , 0);
-		Imgproc.goodFeaturesToTrack(prevGray, prevCorner,200, 0.01, 30);
+		Imgproc.goodFeaturesToTrack(prevGray, prevCorner,aModel.getMaxCorners(), aModel.getQualityLevel(), aModel.getMinDistance());
 		List<Point2D>overlays = new ArrayList<>();
 		for(Point aPoint : prevCorner.toArray()) {
 		    overlays.add(new Point2D.Double(aPoint.x, aPoint.y));
