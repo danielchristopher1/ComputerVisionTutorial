@@ -10,7 +10,6 @@ import java.net.URL;
 import javax.imageio.ImageIO;
 import javax.swing.SwingUtilities;
 
-import org.opencv.core.Core;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.imgproc.Imgproc;
@@ -19,12 +18,6 @@ import org.opencv.imgproc.Imgproc;
  * A class that contains utility methods for computer vision 
  */
 public class ComputerVisionTutorial {
-
-    static {
-	//Load the opencv library, exactly once
-	System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
-    }
-
 
     /**
      * Helper method to convert an OPENCV {@link Mat} to an {@link Image}
@@ -36,6 +29,7 @@ public class ComputerVisionTutorial {
      * 	The Image
      */
     public static BufferedImage toBufferedImage(Mat pMatrix){
+	
 	int type = BufferedImage.TYPE_BYTE_GRAY;
 	if ( pMatrix.channels() > 1 ) {
 	    Mat m2 = new Mat();
@@ -116,6 +110,7 @@ public class ComputerVisionTutorial {
     }
 
     public static void main(String[] args) {
+	OpenCVInitializer.init();
 	URL aResource = ComputerVisionTutorial.class.getResource("Test.jpg");
 	File aFile = new File(aResource.getFile());
 	
@@ -129,8 +124,8 @@ public class ComputerVisionTutorial {
 	        
 	        @Override
 	        public void run() {
-	    		ImageWindow.createImageFrame(orignalImage);
-	    		ImageWindow.createImageFrame(grayImage);
+	    		ImageWindow.createImageFrame(orignalImage, "Original Image");
+	    		ImageWindow.createImageFrame(grayImage, "Gray Image");
 	        }
 	    });
 	}
