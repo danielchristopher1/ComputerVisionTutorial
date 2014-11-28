@@ -5,7 +5,6 @@ import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.opencv.core.Core;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfByte;
 import org.opencv.core.MatOfFloat;
@@ -20,6 +19,8 @@ import org.opencv.video.Video;
 import com.google.coconnell84.ComputerVisionTutorial;
 import com.google.coconnell84.ImageWindow;
 import com.google.coconnell84.OpenCVInitializer;
+import com.google.coconnell84.cameraCapture.CameraCapturer;
+import com.google.coconnell84.cameraCapture.IFrameAvailListener;
 
 
 /**
@@ -28,71 +29,62 @@ import com.google.coconnell84.OpenCVInitializer;
  * @author Christopher
  *
  */
-public class CameraStabilizationExample {
+public class CameraStabilizationExample implements IFrameAvailListener {
 
-    public static void main(String[] args) {
-	OpenCVInitializer.init();
-	
-	int DEVICE = 0;
-	VideoCapture camera = new VideoCapture(DEVICE);
-	try {
-	    Thread.sleep(1000l);
-	} catch (InterruptedException e1) {
-	    e1.printStackTrace();
-	}
-	
+    private Mat currentFrame = new Mat();
+    private Mat prevGray = null;
 
-	camera.open(DEVICE);
+    ImageWindow imageWindow = ImageWindow.createImageFrame(null, "Image Window");
+    ImageWindow finalWindow = ImageWindow.createImageFrame(null, "Final Window");
+    private CameraCapturer mCapture;
+    private CameraStabilizationControlView mCalibControlView;
 
-	if(!camera.isOpened()) {
-	    System.err.println("FAIL!");
-	}
+    public CameraStabilizationExample() {
+	mCapture = new CameraCapturer();
+	mCalibControlView = CameraStabilizationControlView.createAndShowGUI(new CameraStabilizationModel());
+    }
 
-	Mat currentFrame = new Mat();
-	Mat prevGray = null;
+    public void start() {
 
-	ImageWindow imageWindow = ImageWindow.createImageFrame(null, "Image Window");
-	ImageWindow finalWindow = ImageWindow.createImageFrame(null, "Final Window");
-	
-	CameraStabilizationControlView calibControlView =
-		CameraStabilizationControlView.createAndShowGUI(new CameraStabilizationModel());
+	mCapture.addFrameAvailListener(this);
+    }
 
-	while(true) {
-
-	    camera.read(currentFrame);
-	    Mat currentFrame2 = new Mat();
+    @Override
+    public void newFramAvail(Mat pFrame) {
+	currentFrame = pFrame;
+	 Mat currentFrame2 = new Mat();
 	    currentFrame.copyTo(currentFrame2);
 	    Mat currentGray = new Mat();
 	    Imgproc.cvtColor(currentFrame, currentGray,Imgproc.COLOR_BGR2GRAY);
 	    if(prevGray != null) {
-		
-		
+
+
 		imageWindow.updateImage(ComputerVisionTutorial.toBufferedImage(currentFrame));
-		
+
 		MatOfPoint prevCorner = new MatOfPoint();
 		MatOfPoint cur_corner = new MatOfPoint();
-		CameraStabilizationModel aModel = calibControlView.getModel();
-		
+		CameraStabilizationModel aModel = mCalibControlView.getModel();
+
 		Imgproc.GaussianBlur(prevGray, prevGray, new Size(3, 3) , 0);
 		Imgproc.goodFeaturesToTrack(prevGray, prevCorner,aModel.getMaxCorners(), aModel.getQualityLevel(), aModel.getMinDistance());
 		List<Point2D>overlays = new ArrayList<>();
 		for(Point aPoint : prevCorner.toArray()) {
 		    overlays.add(new Point2D.Double(aPoint.x, aPoint.y));
 		}
-		
+
 		imageWindow.setOverlays(overlays);
 		MatOfByte status = new MatOfByte();
 		MatOfFloat err = new MatOfFloat();
-		
+
 		MatOfPoint2f prevCorner2F = new MatOfPoint2f(prevCorner.toArray());
 		MatOfPoint2f cur_corner2F = new MatOfPoint2f(cur_corner.toArray());
 		Video.calcOpticalFlowPyrLK(prevGray, currentGray, prevCorner2F, cur_corner2F, status, err);
-		
-		
+
+
 		List<Byte> statusList = status.toList();
 		Point[] prevCornerArray = prevCorner2F.toArray();
 		Point[] currentCornerArray = cur_corner2F.toArray();
-		
+
 		List<Point>prevCornerFinal = new ArrayList<>();
 		List<Point>currentCornerFinal = new ArrayList<Point>();
 		for(int i=0; i<statusList.size();i++) {
@@ -102,15 +94,15 @@ public class CameraStabilizationExample {
 			currentCornerFinal.add(currentCornerArray[i]);
 		    }
 		}
-		
+
 		if(!prevCornerFinal.isEmpty() && !currentCornerFinal.isEmpty()) {
 		    MatOfPoint2f prevCornerFinalMat = new MatOfPoint2f(prevCornerFinal.toArray(new Point[prevCornerFinal.size()]));
 		    MatOfPoint2f currCornerFinalMat = new MatOfPoint2f(currentCornerFinal.toArray(new Point[currentCornerFinal.size()]));
 		    Mat finalTransform = Video.estimateRigidTransform(prevCornerFinalMat, currCornerFinalMat, false);
 
-		    
+
 		    Size aSize = finalTransform.size();
-		    
+
 		    if(aSize.width ==3 && aSize.height == 2) {
 			System.out.println("Transform size= " + aSize.width +" x " + aSize.height);
 			Imgproc.warpAffine(currentFrame, currentFrame2, finalTransform, currentFrame2.size());
@@ -122,16 +114,22 @@ public class CameraStabilizationExample {
 
 			System.out.println("Transform size= " + aSize.width +" x " + aSize.height);
 			finalWindow.updateImage(ComputerVisionTutorial.toBufferedImage(currentFrame));
-			    System.out.println("FAIL SIZE!");
+			System.out.println("FAIL SIZE!");
 		    }
 		} else {
 		    finalWindow.updateImage(ComputerVisionTutorial.toBufferedImage(currentFrame));
 		    System.out.println("FAIL!");
 		}
 	    }
-	    	    
+
 	    prevGray = currentGray;
-	}
+
+    }
+
+    public static void main(String[] args) {
+	OpenCVInitializer.init();
+	CameraStabilizationExample anExample = new CameraStabilizationExample();
+	anExample.start();
     }
 
 }
