@@ -8,7 +8,10 @@ import javax.swing.BorderFactory;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 
+import org.opencv.core.Core;
+import org.opencv.core.CvType;
 import org.opencv.core.Mat;
+import org.opencv.core.Scalar;
 import org.opencv.imgproc.Imgproc;
 
 import com.google.coconnell84.ComputerVisionTutorial;
@@ -29,7 +32,7 @@ public class ColorTrackingOne implements IFrameAvailListener {
     private Map<Integer, ImageRenderer>mRenderes = new TreeMap();
     
     private JFrame mFrame;
-    private static final int NUM_STEPS = 2;
+    private static final int NUM_STEPS = 3;
     private static final int STEPS_PER_ROW=3;
 
 
@@ -39,7 +42,7 @@ public class ColorTrackingOne implements IFrameAvailListener {
 	mFrame = new  JFrame();
 	
 	
-	int numRows = (NUM_STEPS/STEPS_PER_ROW) + 1;
+	int numRows = (NUM_STEPS/STEPS_PER_ROW);
 	
 	JPanel contentPanel = new JPanel(new GridLayout(numRows, STEPS_PER_ROW));
 	for(int i=0;i<NUM_STEPS;i++) {
@@ -73,11 +76,18 @@ public class ColorTrackingOne implements IFrameAvailListener {
 	
 	mRenderes.get(0).setImage(ComputerVisionTutorial.toBufferedImage(pFrame));
 	
-	Mat finalImage = new Mat();
+	Mat hsvImage = new Mat();
 	//Step 1: Convert the image to HUV
-	Imgproc.cvtColor(pFrame, finalImage, Imgproc.COLOR_BGR2HSV);
+	Imgproc.cvtColor(pFrame, hsvImage, Imgproc.COLOR_BGR2HSV);
 
-	mRenderes.get(1).setImage(ComputerVisionTutorial.toBufferedImage(finalImage));
+	mRenderes.get(1).setImage(ComputerVisionTutorial.toBufferedImage(hsvImage));
+	
+	Mat threshImage = new Mat(pFrame.size(),CvType.CV_8UC1);
+	Scalar lower = new Scalar(20, 100, 100);
+	Scalar upper = new Scalar(30, 255, 255);
+	Core.inRange(hsvImage, lower, upper, threshImage);
+	
+	mRenderes.get(2).setImage(ComputerVisionTutorial.toBufferedImage(threshImage));
 	
 	mFrame.pack();
 	
