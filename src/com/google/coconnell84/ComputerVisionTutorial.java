@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.net.URL;
 
 import javax.imageio.ImageIO;
+import javax.swing.JFileChooser;
 import javax.swing.SwingUtilities;
 
 import org.opencv.core.CvType;
@@ -111,23 +112,28 @@ public class ComputerVisionTutorial {
 
     public static void main(String[] args) {
 	OpenCVInitializer.init();
-	URL aResource = ComputerVisionTutorial.class.getResource("Test.jpg");
-	File aFile = new File(aResource.getFile());
 	
-	if(aFile.exists()) {
-	    Mat aMatrix = toMatrix(getImageFromFile(aFile));
-	    final BufferedImage orignalImage = toBufferedImage(aMatrix);
-	    aMatrix = convertToGrayScale(aMatrix);
-	    final BufferedImage grayImage = toBufferedImage(aMatrix);
-	    
-	    SwingUtilities.invokeLater(new Runnable() {
-	        
-	        @Override
-	        public void run() {
-	    		ImageWindow.createImageFrame(orignalImage, "Original Image");
-	    		ImageWindow.createImageFrame(grayImage, "Gray Image");
-	        }
-	    });
+	JFileChooser aChooser = new JFileChooser();
+	int aShowOpenDialog = aChooser.showOpenDialog(null);
+	
+	if(aShowOpenDialog == JFileChooser.APPROVE_OPTION) {
+	    File aFile = aChooser.getSelectedFile();
+
+	    if(aFile.exists()) {
+		Mat aMatrix = toMatrix(getImageFromFile(aFile));
+		final BufferedImage orignalImage = toBufferedImage(aMatrix);
+		aMatrix = convertToGrayScale(aMatrix);
+		final BufferedImage grayImage = toBufferedImage(aMatrix);
+
+		SwingUtilities.invokeLater(new Runnable() {
+
+		    @Override
+		    public void run() {
+			ImageWindow.createImageFrame(orignalImage, "Original Image");
+			ImageWindow.createImageFrame(grayImage, "Gray Image");
+		    }
+		});
+	    }
 	}
     }
 }

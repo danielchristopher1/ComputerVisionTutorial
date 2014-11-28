@@ -12,6 +12,9 @@ import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 
+import com.google.coconnell84.utils.IRenderable;
+import com.google.coconnell84.utils.ImageRenderer;
+
 /**
  * A class that constructs a frame that can show a {@link BufferedImage} and any
  * overlays, as defined as 2D points
@@ -40,51 +43,14 @@ public class ImageWindow {
      * The JFRAME to show
      */
     private final JFrame aFrame = new JFrame();
-
-    /**
-     * The image to dispay. If this image is null, nothing is drawn
-     */
-    private Image mImage;
-
-    /**
-     * List over overlay points to draw
-     */
-    private List<Point2D> mOverlays;
     
-    /**
-     * The {@link JPanel} that draws the image
-     */
-    private final JPanel mView = new JPanel() {
-	@Override
-	protected void paintComponent(final java.awt.Graphics g) {
-	    final Graphics2D g2 = (Graphics2D) g;
-	    super.paintComponent(g2);
-	    if (mImage != null) {
-		g2.drawImage(mImage, 0, 0, mImage.getWidth(null),
-			mImage.getHeight(null), null);
+    private final ImageRenderer mView = new ImageRenderer();
 
-		if (mOverlays != null) {
-		    final Color oldColor = g.getColor();
-		    g2.setColor(Color.RED);
-		    for (final Point2D aFeature : mOverlays) {
-			g2.drawOval((int) aFeature.getX() - 5,
-				(int) aFeature.getY() - 5, 5, 5);
-		    }
-		    g2.setColor(oldColor);
-		}
-	    }
-	};
-    };
 
     private ImageWindow(final Image pImage, final String pTitle) {
-	mImage = pImage;
+	mView.setImage(pImage);
 	aFrame.setTitle(pTitle);
-	if (pImage != null) {
-	    mView.setPreferredSize(new Dimension(mImage.getWidth(null), mImage
-		    .getHeight(null)));
-	}
-
-	aFrame.setContentPane(mView);
+	aFrame.setContentPane(mView.getView());
 	aFrame.pack();
 	aFrame.setVisible(true);
     }
@@ -95,8 +61,20 @@ public class ImageWindow {
      * 	List of overlay points to display
      */
     public void setOverlays(final List<Point2D> pOverlays) {
-	mOverlays = pOverlays;
-	mView.repaint();
+	mView.addRenderable(new IRenderable() {
+	    
+	    @Override
+	    public void render(Graphics2D pGraphics) {
+		    final Color oldColor = pGraphics.getColor();
+		    pGraphics.setColor(Color.RED);
+		    for (final Point2D aFeature : pOverlays) {
+			pGraphics.drawOval((int) aFeature.getX() - 5,
+				(int) aFeature.getY() - 5, 5, 5);
+		    }
+		    pGraphics.setColor(oldColor);
+		
+	    }
+	});
 
     }
 
@@ -109,14 +87,9 @@ public class ImageWindow {
     public void updateImage(final BufferedImage pImage) {
 
 	if (SwingUtilities.isEventDispatchThread()) {
-	    mImage = pImage;
-
-	    if (mImage != null) {
-		mView.setPreferredSize(new Dimension(mImage.getWidth(null),
-			mImage.getHeight(null)));
-		aFrame.pack();
-	    }
-	    mView.repaint();
+	    mView.setImage(pImage);
+	    aFrame.pack();
+	    
 	} else {
 	    SwingUtilities.invokeLater(new Runnable() {
 
