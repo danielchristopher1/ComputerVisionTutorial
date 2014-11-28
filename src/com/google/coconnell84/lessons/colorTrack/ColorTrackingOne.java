@@ -1,12 +1,15 @@
 package com.google.coconnell84.lessons.colorTrack;
 
 import java.awt.GridLayout;
+import java.util.Map;
+import java.util.TreeMap;
 
 import javax.swing.BorderFactory;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 
 import org.opencv.core.Mat;
+import org.opencv.imgproc.Imgproc;
 
 import com.google.coconnell84.ComputerVisionTutorial;
 import com.google.coconnell84.OpenCVInitializer;
@@ -23,22 +26,30 @@ import com.google.coconnell84.utils.ImageRenderer;
  */
 public class ColorTrackingOne implements IFrameAvailListener {
     
-    private ImageRenderer mOrigRender;
+    private Map<Integer, ImageRenderer>mRenderes = new TreeMap();
+    
     private JFrame mFrame;
+    private static final int NUM_STEPS = 2;
+    private static final int STEPS_PER_ROW=3;
 
 
     public ColorTrackingOne() {
 	CameraCapturer aCapturer = new CameraCapturer();
 	
 	mFrame = new  JFrame();
-	JPanel contentPanel = new JPanel(new GridLayout(1, 2));
-	mOrigRender = new ImageRenderer();
-	mOrigRender.getView().setBorder(BorderFactory.createTitledBorder("Orig Image"));
 	
-	ImageRenderer finishedImage = new ImageRenderer();
-	finishedImage.getView().setBorder(BorderFactory.createTitledBorder("Final Image"));
-	contentPanel.add(mOrigRender.getView());
-	contentPanel.add(finishedImage.getView());
+	
+	int numRows = (NUM_STEPS/STEPS_PER_ROW) + 1;
+	
+	JPanel contentPanel = new JPanel(new GridLayout(numRows, STEPS_PER_ROW));
+	for(int i=0;i<NUM_STEPS;i++) {
+	    ImageRenderer aRender = new ImageRenderer();
+	    String title = (i ==0)?"ORIG IMAGE" : "STEP-"+i;
+	    aRender.getView().setBorder(BorderFactory.createTitledBorder(title));
+	    contentPanel.add(aRender.getView());
+	    mRenderes.put(i, aRender);
+	}
+	
 	
 	mFrame.setContentPane(contentPanel);
 	mFrame.pack();
@@ -60,8 +71,14 @@ public class ColorTrackingOne implements IFrameAvailListener {
     @Override
     public void newFramAvail(Mat pFrame) {
 	
-	mOrigRender.setImage(ComputerVisionTutorial.toBufferedImage(pFrame));
+	mRenderes.get(0).setImage(ComputerVisionTutorial.toBufferedImage(pFrame));
+	
+	Mat finalImage = new Mat();
+	//Step 1: Convert the image to HUV
+	Imgproc.cvtColor(pFrame, finalImage, Imgproc.COLOR_BGR2HSV);
 
+	mRenderes.get(1).setImage(ComputerVisionTutorial.toBufferedImage(finalImage));
+	
 	mFrame.pack();
 	
     }
