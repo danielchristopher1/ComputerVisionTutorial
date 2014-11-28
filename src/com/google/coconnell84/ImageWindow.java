@@ -6,6 +6,7 @@ import java.awt.Graphics2D;
 import java.awt.Image;
 import java.awt.geom.Point2D;
 import java.awt.image.BufferedImage;
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.swing.JFrame;
@@ -46,9 +47,13 @@ public class ImageWindow {
     
     private final ImageRenderer mView = new ImageRenderer();
 
+    private PointRenderer mRenderable;
+
 
     private ImageWindow(final Image pImage, final String pTitle) {
 	mView.setImage(pImage);
+	mRenderable = new PointRenderer();
+	mView.addRenderable(mRenderable);
 	aFrame.setTitle(pTitle);
 	aFrame.setContentPane(mView.getView());
 	aFrame.pack();
@@ -61,20 +66,8 @@ public class ImageWindow {
      * 	List of overlay points to display
      */
     public void setOverlays(final List<Point2D> pOverlays) {
-	mView.addRenderable(new IRenderable() {
-	    
-	    @Override
-	    public void render(Graphics2D pGraphics) {
-		    final Color oldColor = pGraphics.getColor();
-		    pGraphics.setColor(Color.RED);
-		    for (final Point2D aFeature : pOverlays) {
-			pGraphics.drawOval((int) aFeature.getX() - 5,
-				(int) aFeature.getY() - 5, 5, 5);
-		    }
-		    pGraphics.setColor(oldColor);
-		
-	    }
-	});
+	mRenderable.setPoints(pOverlays);
+	mView.getView().repaint();
 
     }
 
@@ -99,6 +92,28 @@ public class ImageWindow {
 
 		}
 	    });
+	}
+    }
+    
+    private class PointRenderer implements IRenderable {
+	private List<Point2D>mPoints = null;
+	
+	public void setPoints(List<Point2D>pPoints) {
+	    mPoints = pPoints;
+	}
+	@Override
+	public void render(Graphics2D pGraphics) {
+	    final Color oldColor = pGraphics.getColor();
+	    pGraphics.setColor(Color.RED);
+
+	    if(mPoints != null) {
+		for (final Point2D aFeature : mPoints) {
+		    pGraphics.drawOval((int) aFeature.getX() - 5,
+			    (int) aFeature.getY() - 5, 5, 5);
+		}
+	    }
+	    pGraphics.setColor(oldColor);
+
 	}
     }
 

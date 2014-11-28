@@ -1,13 +1,8 @@
 package com.google.coconnell84.utils;
 
-import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics2D;
 import java.awt.Image;
-import java.awt.Point;
-import java.awt.geom.Point2D;
-import java.awt.image.BufferedImage;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -61,6 +56,7 @@ public class ImageRenderer {
 	    mView.setPreferredSize(new Dimension(mImage.getWidth(null), mImage
 		    .getHeight(null)));
 	}
+	mView.repaint();
     }
     public Image getImage() {
 	return mImage;
