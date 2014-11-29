@@ -8,13 +8,16 @@ import javax.swing.SwingUtilities;
 
 import com.google.coconnell84.OpenCVInitializer;
 import com.google.coconnell84.camStab.CameraStabilizationExample;
+import com.google.coconnell84.cameraCapture.CameraCapturer;
 import com.google.coconnell84.lessons.colorTrack.ColorTrackingOne;
+import com.google.coconnell84.lessons.colorTrack.GraphPanel;
 
 
 public class App {
     
     private static CameraStabilizationExample anExample;
     private static ColorTrackingOne aTracker;
+    private static GraphPanel aPanel;
     public static void createAndShowGUI() {
 	JFrame aFrame = new JFrame();
 	JPanel buttonPanel = new JPanel();
@@ -39,7 +42,13 @@ public class App {
 	    public void actionPerformed(ActionEvent pE) {
 		
 		if(aTracker == null) {
+		    CameraCapturer aCapturer = new CameraCapturer();
 		    aTracker = new ColorTrackingOne();
+		    aPanel = new GraphPanel();
+		    
+		    aCapturer.addFrameAvailListener(aTracker);
+		    aCapturer.addFrameAvailListener(aPanel);
+		    
 		}
 	    }
 	});

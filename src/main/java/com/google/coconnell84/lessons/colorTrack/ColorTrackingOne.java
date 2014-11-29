@@ -45,16 +45,12 @@ import com.google.coconnell84.utils.ImageRenderer;
 public class ColorTrackingOne implements IFrameAvailListener {
 
     private Map<Integer, ImageRenderer>mRenderes = new TreeMap();
-
-    private static final Dimension GRAPH_SIZE = new Dimension(300,100);
     private JFrame mFrame;
     private static final int NUM_STEPS = 3;
     private static final int STEPS_PER_ROW=3;
     protected static final Scalar lower = new Scalar(20, 100, 100);
     protected static final Scalar upper = new Scalar(30, 255, 255);
 
-    private DrawGraphModel mModel =
-	    new DrawGraphModel(new ArrayList<Integer>(), GRAPH_SIZE);
     private  DrawGraph mHueGraph = null;
 
     private Color mLowerColor = getFromScalar(lower);
@@ -76,8 +72,6 @@ public class ColorTrackingOne implements IFrameAvailListener {
     }
 
     public ColorTrackingOne() {
-	CameraCapturer aCapturer = new CameraCapturer();
-
 	mFrame = new  JFrame();
 
 
@@ -150,9 +144,6 @@ public class ColorTrackingOne implements IFrameAvailListener {
 	mFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 	mFrame.setVisible(true);
 
-
-	aCapturer.addFrameAvailListener(this);
-
     }
 
 
@@ -182,37 +173,6 @@ public class ColorTrackingOne implements IFrameAvailListener {
 	String upperString = printScalar("upper= ", upperColor);
 	System.out.println(lowerString +", "+ upperString);
 
-	int counts[] = new int[180];
-	for(int i=0;i<counts.length;i++) {
-	    counts[i] = 0;
-	}
-
-	for(int i=0;i<hsvImage.rows();i++) {
-	    for(int j=0;j<hsvImage.cols();j++) {
-		double[] singlePixel = hsvImage.get(i, j);
-		counts[(int)singlePixel[0]]++;
-	    }
-	}
-	final List<Integer>newCounts = new ArrayList<Integer>();
-	for(int aCount : counts) {
-	    newCounts.add(aCount);
-	}
-
-	SwingUtilities.invokeLater(new Runnable() {
-
-	    @Override
-	    public void run() {
-		mModel.setCounts(newCounts);
-		if(mHueGraph == null) {
-		    mHueGraph = new DrawGraph(mModel);
-		    JFrame aFrame = new JFrame();
-		    aFrame.setContentPane(mHueGraph);
-		    aFrame.pack();
-		    aFrame.setVisible(true);
-		}
-		mHueGraph.updateModel(mModel);
-	    }
-	});
 	Core.inRange(hsvImage, lowerColor, upperColor, threshImage);
 
 	mRenderes.get(2).setImage(ComputerVisionTutorial.toBufferedImage(threshImage));

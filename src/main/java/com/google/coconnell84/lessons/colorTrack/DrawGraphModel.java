@@ -7,6 +7,9 @@ import java.util.List;
 
 public class DrawGraphModel {
 
+    public DrawGraphModel(Dimension pSize) {
+	this(new ArrayList<Integer>(), pSize);
+    }
     public DrawGraphModel(List<Integer>scores, Dimension pSize) {
 
 	if(scores != null && !scores.isEmpty()) {
