@@ -2,9 +2,13 @@ package com.google.coconnell84.lessons.colorTrack;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Dimension;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -17,6 +21,7 @@ import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JPanel;
+import javax.swing.SwingUtilities;
 
 import org.opencv.core.Core;
 import org.opencv.core.CvType;
@@ -41,24 +46,33 @@ public class ColorTrackingOne implements IFrameAvailListener {
 
     private Map<Integer, ImageRenderer>mRenderes = new TreeMap();
 
+    private static final Dimension GRAPH_SIZE = new Dimension(300,100);
     private JFrame mFrame;
     private static final int NUM_STEPS = 3;
     private static final int STEPS_PER_ROW=3;
-    private static final Scalar lower = new Scalar(20, 100, 100);
-    private static final Scalar upper = new Scalar(30, 255, 255);
+    protected static final Scalar lower = new Scalar(20, 100, 100);
+    protected static final Scalar upper = new Scalar(30, 255, 255);
+    
+    private DrawGraphModel mModel =
+	    new DrawGraphModel(new ArrayList<Integer>(), GRAPH_SIZE);
+    private  DrawGraph mHueGraph = null;
     
     private Color mLowerColor = getFromScalar(lower);
     private Color mUpperColor = getFromScalar(upper);
     
-    private static Color getFromScalar(Scalar pScalar) {
-	return Color.getHSBColor((float)pScalar.val[0], (float)pScalar.val[1], (float)pScalar.val[2]);
+    public static Color getFromScalar(Scalar pScalar) {
+	double hValue = (pScalar.val[0]/179f);
+	double sValue = (pScalar.val[1]/255f);
+	double vValue = (pScalar.val[2]/255f);
+	
+	return Color.getHSBColor((float)hValue, (float)sValue, (float)vValue);
     }
     
-    private static Scalar getFromColor(Color pColor) {
+    public static Scalar getFromColor(Color pColor) {
 	float[] hsv = new float[3];
 	Color.RGBtoHSB(pColor.getRed(),pColor.getGreen(),pColor.getBlue(),hsv);
 	
-	return new Scalar(hsv[0], hsv[1],hsv[2]);
+	return new Scalar(Math.ceil(hsv[0]*179f), Math.ceil(hsv[1]*255f),Math.ceil(hsv[2]*255f));
     }
 
     public ColorTrackingOne() {
@@ -153,11 +167,60 @@ public class ColorTrackingOne implements IFrameAvailListener {
 
 	Mat threshImage = new Mat(pFrame.size(),CvType.CV_8UC1);
 
-	Core.inRange(hsvImage, getFromColor(mLowerColor), getFromColor(mUpperColor), threshImage);
+	Scalar lowerColor = getFromColor(mLowerColor);
+	Scalar upperColor = getFromColor(mUpperColor);
+	
+	String lowerString = printScalar("lower= ", lowerColor);
+	String upperString = printScalar("upper= ", upperColor);
+	System.out.println(lowerString +", "+ upperString);
+	
+	int counts[] = new int[255];
+	for(int i=0;i<counts.length;i++) {
+	    counts[i] = 0;
+	}
+	
+	for(int i=0;i<hsvImage.rows();i++) {
+	    for(int j=0;j<hsvImage.cols();j++) {
+		double[] singlePixel = hsvImage.get(i, j);
+		counts[(int)singlePixel[0]]++;
+	    }
+	}
+	final List<Integer>newCounts = new ArrayList<Integer>();
+	for(int aCount : counts) {
+	    newCounts.add(aCount);
+	}
+	
+	SwingUtilities.invokeLater(new Runnable() {
+	    
+	    @Override
+	    public void run() {
+		mModel.setCounts(newCounts);
+		if(mHueGraph == null) {
+		    mHueGraph = new DrawGraph(mModel);
+		    JFrame aFrame = new JFrame();
+		    aFrame.setContentPane(mHueGraph);
+		    aFrame.pack();
+		    aFrame.setVisible(true);
+		}
+		mHueGraph.updateModel(mModel);
+	    }
+	});
+	Core.inRange(hsvImage, lowerColor, upperColor, threshImage);
 
 	mRenderes.get(2).setImage(ComputerVisionTutorial.toBufferedImage(threshImage));
 
 	mFrame.pack();
 
+    }
+
+    private String printScalar(String pString, Scalar pLowerColor) {
+	StringBuilder returnString = new StringBuilder();
+	double[] aVal = pLowerColor.val;
+	returnString.append(pString);
+	returnString.append("[H= ").append(aVal[0]);
+	returnString.append(", S= ").append(aVal[1]);
+	returnString.append(", V= ").append(aVal[2]);
+	returnString.append("]");
+	return returnString.toString();
     }
 }
