@@ -52,26 +52,26 @@ public class ColorTrackingOne implements IFrameAvailListener {
     private static final int STEPS_PER_ROW=3;
     protected static final Scalar lower = new Scalar(20, 100, 100);
     protected static final Scalar upper = new Scalar(30, 255, 255);
-    
+
     private DrawGraphModel mModel =
 	    new DrawGraphModel(new ArrayList<Integer>(), GRAPH_SIZE);
     private  DrawGraph mHueGraph = null;
-    
+
     private Color mLowerColor = getFromScalar(lower);
     private Color mUpperColor = getFromScalar(upper);
-    
+
     public static Color getFromScalar(Scalar pScalar) {
-	double hValue = (pScalar.val[0]/179f);
+	double hValue = (pScalar.val[0]/180f);
 	double sValue = (pScalar.val[1]/255f);
 	double vValue = (pScalar.val[2]/255f);
-	
+
 	return Color.getHSBColor((float)hValue, (float)sValue, (float)vValue);
     }
-    
+
     public static Scalar getFromColor(Color pColor) {
 	float[] hsv = new float[3];
 	Color.RGBtoHSB(pColor.getRed(),pColor.getGreen(),pColor.getBlue(),hsv);
-	
+
 	return new Scalar(Math.ceil(hsv[0]*179f), Math.ceil(hsv[1]*255f),Math.ceil(hsv[2]*255f));
     }
 
@@ -94,47 +94,55 @@ public class ColorTrackingOne implements IFrameAvailListener {
 
 	JMenuBar aMenuBar = new JMenuBar();
 	JMenu mainMenu = new JMenu("MAIN");
-	
+
 
 	aMenuBar.add(mainMenu);
 
 	JPanel topPanel = new JPanel();
 	topPanel.add(aMenuBar);
-	
+
 	final Color lowerColor = Color.getHSBColor((float)lower.val[0],(float) lower.val[1],(float) lower.val[2]);
 	final JLabel lowerColorLabel= new JLabel("LOWER");
 	lowerColorLabel.setForeground(lowerColor);
 	topPanel.add(lowerColorLabel);
-	
+
 	Color upperColor= Color.getHSBColor((float)upper.val[0],(float) upper.val[1],(float) upper.val[2]);
 	final JLabel upperColorLabel = new JLabel("UPPER");
 	upperColorLabel.setForeground(upperColor);
 	topPanel.add(upperColorLabel);
-	
+
 
 	JMenuItem setLowerColor = new JMenuItem("Set Lower Color");
 	setLowerColor.addActionListener(new ActionListener() {
-	    
+
 	    @Override
 	    public void actionPerformed(ActionEvent pE) {
-		mLowerColor= JColorChooser.showDialog(null, "Pick Lower Color", mLowerColor);
-		lowerColorLabel.setForeground(mLowerColor);
+		Color newColor = JColorChooser.showDialog(null, "Pick Lower Color", mLowerColor);
+		if(newColor != null)  {
+		    mLowerColor = newColor;
+
+		    lowerColorLabel.setForeground(mLowerColor);
+		}
 	    }
 	});
 	mainMenu.add(setLowerColor);
-	
+
 	JMenuItem setUpperColor = new JMenuItem("Set Upper Color");
 	setUpperColor.addActionListener(new ActionListener() {
-	    
+
 	    @Override
 	    public void actionPerformed(ActionEvent pE) {
-		mUpperColor = JColorChooser.showDialog(null, "Pick Upper Color", mLowerColor);
-		upperColorLabel.setForeground(mUpperColor);
+		Color newColor = JColorChooser.showDialog(null, "Pick Upper Color", mUpperColor);
+
+		if(newColor != null) {
+		    mUpperColor = newColor;
+		    upperColorLabel.setForeground(mUpperColor);
+		}
 	    }
 	});
-	
+
 	mainMenu.add(setUpperColor);
-	
+
 	contentPanel.add(topPanel, BorderLayout.NORTH);
 	contentPanel.add(imagePanel, BorderLayout.CENTER);
 	mFrame.setContentPane(contentPanel);
@@ -169,16 +177,16 @@ public class ColorTrackingOne implements IFrameAvailListener {
 
 	Scalar lowerColor = getFromColor(mLowerColor);
 	Scalar upperColor = getFromColor(mUpperColor);
-	
+
 	String lowerString = printScalar("lower= ", lowerColor);
 	String upperString = printScalar("upper= ", upperColor);
 	System.out.println(lowerString +", "+ upperString);
-	
-	int counts[] = new int[255];
+
+	int counts[] = new int[180];
 	for(int i=0;i<counts.length;i++) {
 	    counts[i] = 0;
 	}
-	
+
 	for(int i=0;i<hsvImage.rows();i++) {
 	    for(int j=0;j<hsvImage.cols();j++) {
 		double[] singlePixel = hsvImage.get(i, j);
@@ -189,9 +197,9 @@ public class ColorTrackingOne implements IFrameAvailListener {
 	for(int aCount : counts) {
 	    newCounts.add(aCount);
 	}
-	
+
 	SwingUtilities.invokeLater(new Runnable() {
-	    
+
 	    @Override
 	    public void run() {
 		mModel.setCounts(newCounts);
