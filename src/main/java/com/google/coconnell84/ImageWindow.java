@@ -4,6 +4,7 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics2D;
 import java.awt.Image;
+import java.awt.Rectangle;
 import java.awt.geom.Point2D;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
@@ -48,12 +49,15 @@ public class ImageWindow {
     private final ImageRenderer mView = new ImageRenderer();
 
     private PointRenderer mRenderable;
+    private BoxRenderer mBoxRenderable;
 
 
     private ImageWindow(final Image pImage, final String pTitle) {
 	mView.setImage(pImage);
 	mRenderable = new PointRenderer();
+	mBoxRenderable = new BoxRenderer();
 	mView.addRenderable(mRenderable);
+	mView.addRenderable(mBoxRenderable);
 	aFrame.setTitle(pTitle);
 	aFrame.setContentPane(mView.getView());
 	aFrame.pack();
@@ -115,6 +119,34 @@ public class ImageWindow {
 	    pGraphics.setColor(oldColor);
 
 	}
+    }
+    
+    private class BoxRenderer implements IRenderable {
+	private Rectangle mRect = null;
+	
+	public void setBox(Rectangle pRect) {
+	    mRect =pRect;
+	}
+	@Override
+	public void render(Graphics2D pGraphics) {
+	    final Color oldColor = pGraphics.getColor();
+	    pGraphics.setColor(Color.RED);
+
+	    if(mRect != null) {
+		pGraphics.drawRect(mRect.x, mRect.y, mRect.width, mRect.height);
+		int centerX = (mRect.x) + (mRect.width/2);
+		int centerY = (mRect.y) + (mRect.height/2);
+		pGraphics.drawString("Trash can", centerX, centerY);
+	    }
+	    pGraphics.setColor(oldColor);
+
+	}
+    }
+
+    public void setBox(Rectangle pMyRect) {
+	mBoxRenderable.setBox(pMyRect);
+	mView.getView().repaint();
+	
     }
 
 }
